@@ -26,7 +26,8 @@ module ExcelappRails
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w[assets tasks])
+    # Disable autoload_lib completely to avoid Zeitwerk conflicts
+    # config.autoload_lib(ignore: %w[assets tasks])
 
     # Configuration for the application, engines, and railties goes here.
     #
@@ -35,6 +36,10 @@ module ExcelappRails
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+    
+    # Exclude lib directory from Zeitwerk auto-loading to avoid naming conflicts
+    config.autoload_paths -= [Rails.root.join('lib')]
+    config.eager_load_paths -= [Rails.root.join('lib')]
 
     # Don't generate system test files.
     config.generators.system_tests = nil
