@@ -52,5 +52,10 @@ module ExcelappRails
     
     # Time zone
     config.time_zone = "Asia/Seoul"
+    
+    # Handle SECRET_KEY_BASE for asset precompilation in production
+    if Rails.env.production? && ENV['SECRET_KEY_BASE'].blank?
+      ENV['SECRET_KEY_BASE'] = 'temporary_key_for_asset_precompilation'
+    end
   end
 end
