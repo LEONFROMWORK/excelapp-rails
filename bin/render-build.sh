@@ -2,11 +2,8 @@
 # exit on error
 set -o errexit
 
-# Set SECRET_KEY_BASE for asset precompilation if not already set
-# Use a temporary key for build process if Render hasn't set one yet
-if [ -z "$SECRET_KEY_BASE" ]; then
-  export SECRET_KEY_BASE="temporary_key_for_asset_precompilation_$(date +%s)"
-fi
+# Set SECRET_KEY_BASE for asset precompilation
+export SECRET_KEY_BASE=${SECRET_KEY_BASE:-"temporary_build_key_$(date +%s)"}
 
 # Install dependencies
 bundle install
