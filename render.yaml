@@ -10,7 +10,7 @@ services:
     env: ruby
     region: singapore
     plan: starter
-    buildCommand: "./bin/render-build.sh"
+    buildCommand: "export SECRET_KEY_BASE=${SECRET_KEY_BASE:-\"temp_$(date +%s)\"}; bundle install; bundle exec rails db:migrate; bundle exec rails tailwindcss:build; bundle exec rails assets:precompile"
     startCommand: "bundle exec puma -C config/puma.rb"
     buildFilter:
       paths:
@@ -35,7 +35,7 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: SECRET_KEY_BASE
-        generateValue: true
+        value: "hardcoded_secret_key_base_for_production_deployment_fix_12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456"
       - key: RAILS_MASTER_KEY
         sync: false
       - key: AWS_ACCESS_KEY_ID
@@ -58,7 +58,7 @@ services:
     env: ruby
     region: singapore
     plan: starter
-    buildCommand: "./bin/render-build.sh"
+    buildCommand: "export SECRET_KEY_BASE=${SECRET_KEY_BASE:-\"temp_$(date +%s)\"}; bundle install; bundle exec rails db:migrate; bundle exec rails tailwindcss:build; bundle exec rails assets:precompile"
     startCommand: "bundle exec solid_queue:start"
     envVars:
       - key: DATABASE_URL
@@ -76,7 +76,7 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: SECRET_KEY_BASE
-        generateValue: true
+        value: "hardcoded_secret_key_base_for_production_deployment_fix_12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456"
       - key: RAILS_MASTER_KEY
         sync: false
       - key: AWS_ACCESS_KEY_ID
