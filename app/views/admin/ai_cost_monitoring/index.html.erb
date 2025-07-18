@@ -1,0 +1,356 @@
+<% content_for :title, "AI 비용 모니터링" %>
+
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">AI 비용 모니터링</h1>
+        <p class="text-gray-600 dark:text-gray-300 mt-2">
+          AI 모델 사용량과 비용을 실시간으로 모니터링하고 분석하세요
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <%= form_with url: admin_ai_cost_monitoring_index_path, method: :get, local: true, class: "flex items-center gap-2" do |form| %>
+          <%= form.select :time_range, 
+                options_for_select([
+                  ['오늘', 'today'],
+                  ['이번 주', 'week'],
+                  ['이번 달', 'month'],
+                  ['올해', 'year']
+                ], @time_range),
+                {},
+                { class: "px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white" } %>
+          <%= form.submit "적용", class: "px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium" %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Cost Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Cost -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">총 사용 비용</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              $<%= number_with_precision(@cost_data[:overview][:total_cost], precision: 2) %>
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">누적 비용</p>
+          </div>
+          <div class="bg-blue-100 dark:bg-blue-900/50 rounded-full p-3">
+            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center text-sm">
+            <span class="text-<%= @cost_data[:cost_trends][:daily_change] >= 0 ? 'green' : 'red' %>-600 font-medium">
+              <%= @cost_data[:cost_trends][:daily_change] >= 0 ? '+' : '' %><%= @cost_data[:cost_trends][:daily_change] %>%
+            </span>
+            <span class="text-gray-500 dark:text-gray-400 ml-2">전일 대비</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Cost -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">오늘 사용 비용</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              $<%= number_with_precision(@cost_data[:overview][:today_cost], precision: 2) %>
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">일일 비용</p>
+          </div>
+          <div class="bg-green-100 dark:bg-green-900/50 rounded-full p-3">
+            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center text-sm">
+            <span class="text-gray-500 dark:text-gray-400">토큰 사용량:</span>
+            <span class="font-medium text-gray-900 dark:text-white ml-2">
+              <%= number_with_delimiter(@cost_data[:token_usage][:today_tokens]) %>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remaining Budget -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">남은 예산</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              $<%= number_with_precision(@cost_data[:overview][:remaining_budget], precision: 2) %>
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">월간 예산</p>
+          </div>
+          <div class="bg-yellow-100 dark:bg-yellow-900/50 rounded-full p-3">
+            <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4">
+          <% budget_percentage = (@cost_data[:overview][:remaining_budget] / @cost_data[:overview][:monthly_budget]) * 100 %>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div class="bg-<%= budget_percentage > 50 ? 'green' : budget_percentage > 20 ? 'yellow' : 'red' %>-600 h-2 rounded-full" 
+                 style="width: <%= budget_percentage %>%"></div>
+          </div>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <%= number_with_precision(budget_percentage, precision: 1) %>% 남음
+          </p>
+        </div>
+      </div>
+
+      <!-- Monthly Projection -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">월간 예상 비용</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+              $<%= number_with_precision(@cost_data[:predictions][:monthly_projection], precision: 2) %>
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">현재 추세 기준</p>
+          </div>
+          <div class="bg-purple-100 dark:bg-purple-900/50 rounded-full p-3">
+            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4">
+          <div class="flex items-center text-sm">
+            <span class="text-gray-500 dark:text-gray-400">권장 예산:</span>
+            <span class="font-medium text-gray-900 dark:text-white ml-2">
+              $<%= number_with_precision(@cost_data[:predictions][:recommended_budget], precision: 2) %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Daily Usage Chart -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">일간 사용량 추이</h3>
+        <div class="h-64">
+          <canvas id="dailyUsageChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Model Usage Pie Chart -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">모델별 사용량</h3>
+        <div class="h-64">
+          <canvas id="modelUsageChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Tables -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Model Usage Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">LLM 모델별 사용량</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">모델</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">비용</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">요청 수</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">평균 비용</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <% @cost_data[:usage_by_model].each do |model_data| %>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                      <%= model_data[:model].split('-').first.capitalize %>
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                      <%= model_data[:model] %>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900 dark:text-white">
+                      $<%= number_with_precision(model_data[:cost], precision: 4) %>
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                      <%= model_data[:percentage] %>%
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <%= number_with_delimiter(model_data[:requests]) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    $<%= number_with_precision(model_data[:avg_cost_per_request], precision: 6) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tier Usage Table -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">티어별 사용량</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">티어</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">비용</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">요청 수</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">평균 비용</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <% @cost_data[:usage_by_tier].each do |tier_data| %>
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                      <%= tier_data[:tier_name] %>
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                      <%= tier_data[:percentage] %>%
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    $<%= number_with_precision(tier_data[:cost], precision: 4) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    <%= number_with_delimiter(tier_data[:requests]) %>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                    $<%= number_with_precision(tier_data[:avg_cost_per_request], precision: 6) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Token Usage Stats -->
+    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">토큰 사용량 통계</h3>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-gray-900 dark:text-white">
+            <%= number_with_delimiter(@cost_data[:token_usage][:total_tokens]) %>
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">총 토큰 사용량</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-gray-900 dark:text-white">
+            <%= number_with_delimiter(@cost_data[:token_usage][:today_tokens]) %>
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">오늘 토큰 사용량</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-gray-900 dark:text-white">
+            <%= number_with_delimiter(@cost_data[:token_usage][:avg_tokens_per_request]) %>
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">평균 토큰/요청</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-gray-900 dark:text-white">
+            $<%= number_with_precision(@cost_data[:token_usage][:token_efficiency], precision: 6) %>
+          </div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">1K 토큰당 비용</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Daily Usage Chart
+  const dailyUsageCtx = document.getElementById('dailyUsageChart').getContext('2d');
+  const dailyUsageData = <%= @cost_data[:daily_usage].to_json.html_safe %>;
+  
+  new Chart(dailyUsageCtx, {
+    type: 'line',
+    data: {
+      labels: Object.keys(dailyUsageData).reverse(),
+      datasets: [{
+        label: '일일 비용 ($)',
+        data: Object.values(dailyUsageData).reverse(),
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return '$' + value.toFixed(2);
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Model Usage Pie Chart
+  const modelUsageCtx = document.getElementById('modelUsageChart').getContext('2d');
+  const modelUsageData = <%= @cost_data[:usage_by_model].to_json.html_safe %>;
+  
+  new Chart(modelUsageCtx, {
+    type: 'pie',
+    data: {
+      labels: modelUsageData.map(item => item.model.split('-')[0]),
+      datasets: [{
+        data: modelUsageData.map(item => item.cost),
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.8)',
+          'rgba(16, 185, 129, 0.8)',
+          'rgba(245, 101, 101, 0.8)',
+          'rgba(251, 191, 36, 0.8)',
+          'rgba(139, 92, 246, 0.8)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': $' + context.parsed.toFixed(4);
+            }
+          }
+        }
+      }
+    }
+  });
+});
+</script>

@@ -1,0 +1,18 @@
+<div class="grid w-full max-w-sm items-center gap-1.5">
+  <% if label %>
+    <label for="<%= name %>" class="<%= label_classes %>">
+      <%= label %>
+      <% if required %>
+        <span class="text-destructive">*</span>
+      <% end %>
+    </label>
+  <% end %>
+  
+  <%= tag.input(**input_attributes) %>
+  
+  <% if error %>
+    <p class="text-sm text-destructive">
+      <%= error %>
+    </p>
+  <% end %>
+</div>

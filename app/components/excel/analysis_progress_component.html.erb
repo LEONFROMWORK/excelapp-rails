@@ -1,0 +1,219 @@
+<div class="bg-card rounded-lg border p-6 space-y-4" data-file-id="<%= excel_file.id %>">
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold">Analysis Progress</h3>
+    <div class="flex items-center space-x-2">
+      <div class="w-2 h-2 rounded-full <%= analysis_status == 'processing' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-300' %>"></div>
+      <span class="text-sm <%= status_color %>"><%= status_message %></span>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="space-y-2">
+    <%= render Ui::ProgressComponent.new(
+      value: progress_percentage,
+      max: 100,
+      label: "Progress"
+    ) %>
+    
+    <% if estimated_completion_time && analysis_status == 'processing' %>
+      <p class="text-sm text-muted-foreground">
+        Estimated completion: ~<%= estimated_completion_time %> seconds
+      </p>
+    <% end %>
+  </div>
+
+  <!-- File Information -->
+  <div class="bg-muted rounded-lg p-4">
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div>
+        <span class="font-medium">File:</span> <%= excel_file.original_name %>
+      </div>
+      <div>
+        <span class="font-medium">Size:</span> <%= number_to_human_size(excel_file.file_size) %>
+      </div>
+      <div>
+        <span class="font-medium">Uploaded:</span> <%= time_ago_in_words(excel_file.created_at) %> ago
+      </div>
+      <div>
+        <span class="font-medium">Status:</span> 
+        <span class="<%= status_color %>"><%= analysis_status.humanize %></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Analysis Details (if completed) -->
+  <% if analysis_details %>
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+      <h4 class="font-medium text-green-800 mb-2">Analysis Results</h4>
+      <div class="grid grid-cols-2 gap-4 text-sm text-green-700">
+        <div>
+          <span class="font-medium">AI Tier:</span> <%= analysis_details[:tier_used].humanize %>
+        </div>
+        <div>
+          <span class="font-medium">Tokens Used:</span> <%= analysis_details[:tokens_used] %>
+        </div>
+        <div>
+          <span class="font-medium">Errors Found:</span> <%= analysis_details[:errors_found] %>
+        </div>
+        <div>
+          <span class="font-medium">Completed:</span> <%= time_ago_in_words(analysis_details[:created_at]) %> ago
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Action Buttons -->
+  <div class="flex justify-end space-x-2">
+    <% if show_cancel_button? %>
+      <button 
+        type="button" 
+        onclick="cancelAnalysis('<%= excel_file.id %>')"
+        class="px-4 py-2 text-sm font-medium text-destructive border border-destructive rounded-md hover:bg-destructive/10 transition-colors"
+      >
+        Cancel Analysis
+      </button>
+    <% end %>
+    
+    <% if show_retry_button? %>
+      <button 
+        type="button" 
+        onclick="retryAnalysis('<%= excel_file.id %>')"
+        class="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+      >
+        Retry Analysis
+      </button>
+    <% end %>
+    
+    <% if analysis_status == 'analyzed' %>
+      <a 
+        href="/files/<%= excel_file.id %>/analysis" 
+        class="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+      >
+        View Results
+      </a>
+    <% end %>
+  </div>
+</div>
+
+<script>
+// WebSocket connection for real-time updates
+const fileId = '<%= excel_file.id %>';
+const cable = ActionCable.createConsumer();
+
+const analysisSubscription = cable.subscriptions.create({
+  channel: 'ExcelAnalysisChannel',
+  file_id: fileId
+}, {
+  connected() {
+    console.log('Connected to analysis channel');
+  },
+
+  disconnected() {
+    console.log('Disconnected from analysis channel');
+  },
+
+  received(data) {
+    handleAnalysisUpdate(data);
+  }
+});
+
+function handleAnalysisUpdate(data) {
+  const container = document.querySelector(`[data-file-id="${fileId}"]`);
+  if (!container) return;
+
+  switch (data.type) {
+    case 'status':
+      updateProgressStatus(data);
+      break;
+    case 'progress':
+      updateProgress(data.progress);
+      break;
+    case 'completed':
+      handleAnalysisComplete(data);
+      break;
+    case 'error':
+      handleAnalysisError(data);
+      break;
+    case 'queued':
+      updateStatus('Analysis queued successfully');
+      break;
+  }
+}
+
+function updateProgressStatus(data) {
+  // Update progress bar and status message
+  const progressBar = document.querySelector('.progress-bar');
+  const statusMessage = document.querySelector('.status-message');
+  
+  if (data.progress !== undefined) {
+    updateProgress(data.progress);
+  }
+  
+  if (data.status) {
+    updateStatus(data.status);
+  }
+}
+
+function updateProgress(progress) {
+  const progressBar = document.querySelector('[role="progressbar"]');
+  if (progressBar) {
+    progressBar.style.transform = `translateX(-${100 - progress}%)`;
+    progressBar.setAttribute('aria-valuenow', progress);
+  }
+}
+
+function updateStatus(message) {
+  const statusElement = document.querySelector('.status-message');
+  if (statusElement) {
+    statusElement.textContent = message;
+  }
+}
+
+function handleAnalysisComplete(data) {
+  // Reload the page to show results
+  window.location.reload();
+}
+
+function handleAnalysisError(data) {
+  updateStatus(`Error: ${data.message}`);
+  
+  // Show error alert
+  const container = document.querySelector(`[data-file-id="${fileId}"]`);
+  const errorAlert = document.createElement('div');
+  errorAlert.className = 'bg-destructive/10 border border-destructive text-destructive rounded-lg p-3 text-sm';
+  errorAlert.textContent = data.message;
+  container.prepend(errorAlert);
+}
+
+function cancelAnalysis(fileId) {
+  if (confirm('Are you sure you want to cancel this analysis?')) {
+    fetch(`/api/files/${fileId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        updateStatus('Analysis cancelled');
+      } else {
+        alert(data.message || 'Failed to cancel analysis');
+      }
+    })
+    .catch(error => {
+      alert('Network error. Please try again.');
+    });
+  }
+}
+
+function retryAnalysis(fileId) {
+  if (confirm('Retry analysis? This will cost tokens.')) {
+    analysisSubscription.send({
+      action: 'request_analysis',
+      file_id: fileId
+    });
+  }
+}
+</script>

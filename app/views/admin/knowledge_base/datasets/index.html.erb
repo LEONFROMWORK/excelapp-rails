@@ -1,0 +1,305 @@
+<% content_for :title, "데이터셋 관리" %>
+
+<div class="min-h-screen bg-gray-50">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <%= link_to "관리자", admin_root_path, class: "hover:text-gray-900" %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          <%= link_to "지식 베이스", admin_knowledge_base_root_path, class: "hover:text-gray-900" %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          <span>데이터셋 관리</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">데이터셋 관리</h1>
+        <p class="text-gray-600 mt-2">Excel Q&A 데이터셋을 업로드하고 관리하세요</p>
+      </div>
+      <div class="flex gap-2">
+        <%= render Ui::ButtonComponent.new do %>
+          <button onclick="document.getElementById('fileInput').click()">
+            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            데이터셋 업로드
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- File Upload (Hidden) -->
+    <input type="file" id="fileInput" accept=".jsonl,.json" style="display: none" onchange="handleFileUpload(event)">
+
+    <!-- Upload Progress -->
+    <div id="uploadProgress" class="bg-white rounded-lg shadow p-6 mb-8 hidden">
+      <div class="flex items-center gap-3 mb-4">
+        <svg class="h-5 w-5 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        <h3 class="text-lg font-semibold text-gray-900">파일 업로드 중...</h3>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <p id="progressText" class="text-sm text-gray-600 mt-2">업로드 준비 중...</p>
+    </div>
+
+    <!-- Datasets List -->
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">업로드된 데이터셋</h2>
+        <p class="text-gray-600 text-sm">총 <%= @datasets.length %>개의 데이터셋</p>
+      </div>
+      
+      <div class="p-6">
+        <% if @datasets.any? %>
+          <div class="space-y-4">
+            <% @datasets.each do |dataset| %>
+              <div class="border rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900"><%= dataset[:name] %></h3>
+                    <p class="text-sm text-gray-500">ID: <%= dataset[:id] %></p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <%= render Ui::BadgeComponent.new(
+                      variant: case dataset[:status]
+                               when 'processed' then :success
+                               when 'processing' then :warning
+                               when 'failed' then :destructive
+                               else :secondary
+                               end
+                    ) do %>
+                      <%= case dataset[:status]
+                          when 'processed' then '처리 완료'
+                          when 'processing' then '처리 중'
+                          when 'failed' then '처리 실패'
+                          else '대기 중'
+                          end %>
+                    <% end %>
+                    
+                    <div class="flex gap-1">
+                      <% if dataset[:status] == 'uploaded' %>
+                        <%= render Ui::ButtonComponent.new(variant: :outline, size: :sm) do %>
+                          <button onclick="processDataset('<%= dataset[:id] %>')">처리 시작</button>
+                        <% end %>
+                      <% end %>
+                      
+                      <%= render Ui::ButtonComponent.new(variant: :outline, size: :sm) do %>
+                        <button onclick="viewDataset('<%= dataset[:id] %>')">상세보기</button>
+                      <% end %>
+                      
+                      <%= render Ui::ButtonComponent.new(variant: :destructive, size: :sm) do %>
+                        <button onclick="deleteDataset('<%= dataset[:id] %>')">삭제</button>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <p class="text-sm text-gray-500">파일 형식</p>
+                    <p class="font-medium text-gray-900"><%= dataset[:file_type] %></p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">파일 크기</p>
+                    <p class="font-medium text-gray-900"><%= dataset[:file_size] %></p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">레코드 수</p>
+                    <p class="font-medium text-gray-900"><%= number_with_delimiter(dataset[:record_count]) %></p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">업로드 시간</p>
+                    <p class="font-medium text-gray-900"><%= time_ago_in_words(Time.parse(dataset[:uploaded_at])) %> 전</p>
+                  </div>
+                </div>
+                
+                <% if dataset[:processed_at] %>
+                  <div class="pt-4 border-t border-gray-200">
+                    <p class="text-sm text-gray-500">
+                      처리 완료: <%= time_ago_in_words(Time.parse(dataset[:processed_at])) %> 전
+                    </p>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-12">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">데이터셋이 없습니다</h3>
+            <p class="mt-1 text-sm text-gray-500">첫 번째 데이터셋을 업로드해보세요</p>
+            <%= render Ui::ButtonComponent.new(class: "mt-3") do %>
+              <button onclick="document.getElementById('fileInput').click()">데이터셋 업로드</button>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Upload Guidelines -->
+    <div class="bg-white rounded-lg shadow p-6 mt-8">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">업로드 가이드라인</h3>
+      <div class="space-y-2 text-sm text-gray-700">
+        <p><strong>지원 형식</strong>: JSONL (JSON Lines) 형식만 지원됩니다</p>
+        <p><strong>파일 크기</strong>: 최대 100MB까지 업로드 가능합니다</p>
+        <p><strong>데이터 구조</strong>: 각 라인은 {question: "", answer: "", category: ""} 형식이어야 합니다</p>
+        <p><strong>품질 요구사항</strong>: Excel 관련 질문과 답변으로 구성되어야 합니다</p>
+        <p><strong>처리 시간</strong>: 파일 크기에 따라 5분~30분 소요될 수 있습니다</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  // Validate file
+  if (!file.name.endsWith('.jsonl') && !file.name.endsWith('.json')) {
+    alert('JSONL 또는 JSON 파일만 업로드 가능합니다');
+    return;
+  }
+  
+  if (file.size > 100 * 1024 * 1024) { // 100MB
+    alert('파일 크기는 100MB를 초과할 수 없습니다');
+    return;
+  }
+  
+  // Show progress
+  const progressDiv = document.getElementById('uploadProgress');
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  
+  progressDiv.classList.remove('hidden');
+  
+  // Simulate upload progress
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    progress += Math.random() * 15;
+    if (progress > 90) progress = 90;
+    
+    progressBar.style.width = progress + '%';
+    progressText.textContent = `업로드 중... ${Math.round(progress)}%`;
+  }, 500);
+  
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch('/admin/knowledge_base/datasets', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      },
+      body: formData
+    });
+    
+    const data = await response.json();
+    
+    clearInterval(progressInterval);
+    progressBar.style.width = '100%';
+    progressText.textContent = '업로드 완료!';
+    
+    if (data.success) {
+      setTimeout(() => {
+        alert(data.message);
+        location.reload();
+      }, 1000);
+    } else {
+      alert('업로드 실패: ' + data.error);
+      progressDiv.classList.add('hidden');
+    }
+  } catch (error) {
+    clearInterval(progressInterval);
+    alert('업로드 중 오류가 발생했습니다: ' + error.message);
+    progressDiv.classList.add('hidden');
+  }
+  
+  // Reset file input
+  event.target.value = '';
+}
+
+async function processDataset(datasetId) {
+  if (!confirm('이 데이터셋의 처리를 시작하시겠습니까?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/admin/knowledge_base/datasets/${datasetId}/process`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(data.message);
+      location.reload();
+    } else {
+      alert('처리 시작에 실패했습니다: ' + data.error);
+    }
+  } catch (error) {
+    alert('오류가 발생했습니다: ' + error.message);
+  }
+}
+
+async function viewDataset(datasetId) {
+  try {
+    const response = await fetch(`/admin/knowledge_base/datasets/${datasetId}`);
+    const data = await response.json();
+    
+    if (data.success) {
+      alert('데이터셋 정보:\n' + JSON.stringify(data.dataset, null, 2));
+    } else {
+      alert('데이터셋 정보를 가져올 수 없습니다: ' + data.error);
+    }
+  } catch (error) {
+    alert('오류가 발생했습니다: ' + error.message);
+  }
+}
+
+async function deleteDataset(datasetId) {
+  if (!confirm('이 데이터셋을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/admin/knowledge_base/datasets/${datasetId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(data.message);
+      location.reload();
+    } else {
+      alert('삭제에 실패했습니다: ' + data.error);
+    }
+  } catch (error) {
+    alert('오류가 발생했습니다: ' + error.message);
+  }
+}
+
+// Auto-refresh for processing datasets
+setInterval(() => {
+  if (document.querySelector('[data-status="processing"]')) {
+    location.reload();
+  }
+}, 30000);
+</script>

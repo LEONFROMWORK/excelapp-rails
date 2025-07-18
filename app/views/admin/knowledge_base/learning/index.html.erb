@@ -1,0 +1,227 @@
+<% content_for :title, "AI 학습 관리" %>
+
+<div class="min-h-screen bg-gray-50">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <%= link_to "관리자", admin_root_path, class: "hover:text-gray-900" %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          <%= link_to "지식 베이스", admin_knowledge_base_root_path, class: "hover:text-gray-900" %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          <span>AI 학습 관리</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">AI 학습 관리</h1>
+        <p class="text-gray-600 mt-2">AI 모델의 학습 상태를 모니터링하고 관리하세요</p>
+      </div>
+      <div class="flex gap-2">
+        <%= render Ui::ButtonComponent.new do %>
+          <button onclick="startTraining('incremental')">
+            증분 학습 시작
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Learning Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">학습 데이터</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">총 훈련 데이터:</span>
+            <span class="font-semibold"><%= number_with_delimiter(@learning_stats[:total_training_data]) %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">모델 버전:</span>
+            <span class="font-semibold"><%= @learning_stats[:model_version] %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">마지막 학습:</span>
+            <span class="font-semibold"><%= time_ago_in_words(@learning_stats[:last_training]) %> 전</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">정확도 지표</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">훈련 정확도:</span>
+            <span class="font-semibold text-green-600"><%= @learning_stats[:training_accuracy] %>%</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">검증 정확도:</span>
+            <span class="font-semibold text-blue-600"><%= @learning_stats[:validation_accuracy] %>%</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">학습 상태:</span>
+            <%= render Ui::BadgeComponent.new(variant: :success) do %>
+              <%= @learning_stats[:training_status].humanize %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">학습 지표</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">완료된 에포크:</span>
+            <span class="font-semibold"><%= @training_metrics[:epochs_completed] %>/<%= @training_metrics[:total_epochs] %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">현재 손실:</span>
+            <span class="font-semibold"><%= @training_metrics[:current_loss] %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">학습 시간:</span>
+            <span class="font-semibold"><%= @training_metrics[:training_time] %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model Status -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">모델 상태</h3>
+      <div class="space-y-4">
+        <% @model_status.each do |model| %>
+          <div class="border rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h4 class="font-semibold text-gray-900"><%= model[:name] %></h4>
+                <p class="text-sm text-gray-500">버전: <%= model[:version] %></p>
+              </div>
+              <div class="flex items-center gap-2">
+                <%= render Ui::BadgeComponent.new(
+                  variant: case model[:status]
+                           when 'active' then :success
+                           when 'training' then :warning
+                           else :secondary
+                           end
+                ) do %>
+                  <%= case model[:status]
+                      when 'active' then '활성'
+                      when 'training' then '학습중'
+                      else model[:status]
+                      end %>
+                <% end %>
+                <%= render Ui::BadgeComponent.new(
+                  variant: case model[:deployment_status]
+                           when 'production' then :default
+                           when 'staging' then :warning
+                           else :secondary
+                           end
+                ) do %>
+                  <%= model[:deployment_status].humanize %>
+                <% end %>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <p class="text-sm text-gray-500">정확도</p>
+                <p class="font-medium text-gray-900"><%= model[:accuracy] %>%</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">마지막 업데이트</p>
+                <p class="font-medium text-gray-900"><%= time_ago_in_words(model[:last_updated]) %> 전</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <%= render Ui::ButtonComponent.new(variant: :outline, size: :sm) do %>
+                  <% if model[:status] == 'training' %>
+                    <button onclick="stopTraining('<%= model[:id] %>')">중단</button>
+                  <% else %>
+                    <button onclick="startTraining('full', '<%= model[:id] %>')">재학습</button>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Training History Chart Placeholder -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">학습 히스토리</h3>
+      <div class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+        <p class="text-gray-500">학습 진행 차트가 여기에 표시됩니다</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function startTraining(type, modelId = null) {
+  const confirmed = confirm(`${type === 'incremental' ? '증분' : '전체'} 학습을 시작하시겠습니까?`);
+  if (!confirmed) return;
+  
+  try {
+    const response = await fetch('/admin/knowledge_base/learning/start_training', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ 
+        type: type,
+        model_id: modelId
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(data.message);
+      location.reload();
+    } else {
+      alert('학습 시작에 실패했습니다: ' + data.error);
+    }
+  } catch (error) {
+    alert('오류가 발생했습니다: ' + error.message);
+  }
+}
+
+async function stopTraining(modelId) {
+  const confirmed = confirm('진행 중인 학습을 중단하시겠습니까?');
+  if (!confirmed) return;
+  
+  try {
+    const response = await fetch('/admin/knowledge_base/learning/stop_training', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ 
+        job_id: modelId
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(data.message);
+      location.reload();
+    } else {
+      alert('학습 중단에 실패했습니다: ' + data.error);
+    }
+  } catch (error) {
+    alert('오류가 발생했습니다: ' + error.message);
+  }
+}
+
+// Auto-refresh for training status
+setInterval(() => {
+  if (document.querySelector('[data-status="training"]')) {
+    location.reload();
+  }
+}, 30000);
+</script>

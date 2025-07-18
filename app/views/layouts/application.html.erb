@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html class="h-full bg-gray-50 dark:bg-gray-900" data-controller="theme" data-theme-value="<%= cookies[:theme] || 'light' %>">
+  <head>
+    <title><%= content_for(:title) || "ExcelApp Rails" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
+    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/icon.png">
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application.tailwind", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="h-full bg-gray-50 dark:bg-gray-900">
+    <% if user_signed_in? %>
+      <!-- Sidebar Navigation (for authenticated users) -->
+      <%= render Navigation::SidebarComponent.new(current_user: current_user, current_path: request.path) %>
+      
+      <!-- Main content area -->
+      <div class="lg:pl-72" data-controller="mobile-menu">
+        <!-- Header -->
+        <%= render Navigation::HeaderComponent.new(current_user: current_user, current_path: request.path) %>
+
+        <!-- Flash messages (for authenticated users) -->
+        <% if flash.any? %>
+          <div class="px-4 sm:px-6 lg:px-8 py-4">
+            <% flash.each do |type, message| %>
+              <div class="rounded-md p-4 <%= type == 'notice' ? 'bg-green-50 dark:bg-green-900/50' : 'bg-red-50 dark:bg-red-900/50' %> mb-4">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <% if type == 'notice' %>
+                      <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      </svg>
+                    <% else %>
+                      <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                      </svg>
+                    <% end %>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm font-medium <%= type == 'notice' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200' %>">
+                      <%= message %>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Main content -->
+        <main class="py-8">
+          <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <%= yield %>
+          </div>
+        </main>
+      </div>
+    <% else %>
+      <!-- Public navigation (for unauthenticated users) -->
+      <nav class="bg-white dark:bg-gray-900 shadow border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex">
+              <div class="flex-shrink-0 flex items-center">
+                <%= link_to root_path, class: "flex items-center" do %>
+                  <div class="h-8 w-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-lg">E</span>
+                  </div>
+                  <span class="ml-3 text-xl font-bold text-gray-900 dark:text-white">ExcelApp</span>
+                <% end %>
+              </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <%= link_to "Login", login_path, class: "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-sm font-medium" %>
+              <%= link_to "Sign up", signup_path, class: "ml-8 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600" %>
+              
+              <!-- Theme toggle for public pages -->
+              <%= render Ui::ThemeToggleComponent.new(size: :sm, show_label: false) %>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Flash messages (for unauthenticated users) -->
+      <% if flash.any? %>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          <% flash.each do |type, message| %>
+            <div class="rounded-md p-4 <%= type == 'notice' ? 'bg-green-50 dark:bg-green-900/50' : 'bg-red-50 dark:bg-red-900/50' %> mb-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <% if type == 'notice' %>
+                    <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                  <% else %>
+                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                  <% end %>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm font-medium <%= type == 'notice' ? 'text-green-800 dark:text-green-200' : 'text-red-800 dark:text-red-200' %>">
+                    <%= message %>
+                  </p>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Main content -->
+      <main class="py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <%= yield %>
+        </div>
+      </main>
+    <% end %>
+  </body>
+</html>

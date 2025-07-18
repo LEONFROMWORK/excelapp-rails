@@ -1,0 +1,630 @@
+<% content_for :title, "RAG 시스템 관리" %>
+
+<div class="min-h-screen bg-gray-50">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <%= link_to "관리자", admin_root_path, class: "hover:text-gray-900" %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          <%= link_to "지식 베이스", admin_knowledge_base_root_path, class: "hover:text-gray-900" %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          <span>RAG 시스템 관리</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">RAG 시스템 관리</h1>
+        <p class="text-gray-600 mt-2">벡터 검색과 RAG 파이프라인을 모니터링하고 관리하세요</p>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white rounded-lg shadow mb-8">
+      <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+          <a href="#overview" class="rag-tab border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="overview">
+            개요
+          </a>
+          <a href="#indices" class="rag-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="indices">
+            벡터 인덱스
+          </a>
+          <a href="#search-test" class="rag-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="search-test">
+            검색 테스트
+          </a>
+          <a href="#embedding-jobs" class="rag-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="embedding-jobs">
+            임베딩 작업
+          </a>
+          <a href="#settings" class="rag-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="settings">
+            설정
+          </a>
+        </nav>
+      </div>
+
+      <!-- Overview Tab -->
+      <div id="overview-content" class="rag-content p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <!-- RAG Stats -->
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-blue-900 mb-4">시스템 통계</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-blue-700">총 벡터 수:</span>
+                <span class="font-semibold text-blue-900"><%= number_with_delimiter(@rag_stats[:total_vectors]) %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-blue-700">벡터 차원:</span>
+                <span class="font-semibold text-blue-900"><%= @rag_stats[:vector_dimensions] %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-blue-700">인덱스 크기:</span>
+                <span class="font-semibold text-blue-900"><%= @rag_stats[:index_size] %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-blue-700">검색 지연시간:</span>
+                <span class="font-semibold text-blue-900"><%= @rag_stats[:search_latency] %>ms</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Performance Metrics -->
+          <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-green-900 mb-4">성능 지표</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-green-700">검색 정확도:</span>
+                <span class="font-semibold text-green-900"><%= @rag_stats[:retrieval_accuracy] %>%</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-green-700">총 검색 수:</span>
+                <span class="font-semibold text-green-900"><%= number_with_delimiter(@search_metrics[:total_searches]) %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-green-700">평균 응답시간:</span>
+                <span class="font-semibold text-green-900"><%= @search_metrics[:avg_response_time] %>ms</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-green-700">성공률:</span>
+                <span class="font-semibold text-green-900"><%= @search_metrics[:success_rate] %>%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Configuration -->
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-purple-900 mb-4">시스템 구성</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-purple-700">임베딩 모델:</span>
+                <span class="font-semibold text-purple-900 text-sm"><%= @rag_stats[:embedding_model] %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-purple-700">벡터 스토어:</span>
+                <span class="font-semibold text-purple-900"><%= @rag_stats[:vector_store] %></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-purple-700">상태:</span>
+                <%= render Ui::BadgeComponent.new(variant: :success) do %>
+                  정상 운영
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Popular Queries -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-white rounded-lg border p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">인기 검색어</h3>
+            <div class="space-y-3">
+              <% @search_metrics[:popular_queries].each do |query| %>
+                <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                  <span class="text-gray-900"><%= query[:query] %></span>
+                  <span class="text-sm text-gray-500"><%= query[:count] %>회</span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg border p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">카테고리별 사용률</h3>
+            <div class="space-y-3">
+              <% @search_metrics[:category_usage].each do |category, percentage| %>
+                <div class="space-y-1">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-700"><%= category %></span>
+                    <span class="text-gray-500"><%= percentage %>%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: <%= percentage %>%"></div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vector Indices Tab -->
+      <div id="indices-content" class="rag-content p-6 hidden">
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">벡터 인덱스 현황</h3>
+          <p class="text-gray-600">벡터 인덱스의 상태와 성능을 모니터링하세요</p>
+        </div>
+
+        <div class="space-y-4">
+          <% @vector_indices.each do |index| %>
+            <div class="bg-white border rounded-lg p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h4 class="text-lg font-semibold text-gray-900"><%= index[:name] %></h4>
+                  <p class="text-sm text-gray-500">ID: <%= index[:id] %></p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <%= render Ui::BadgeComponent.new(
+                    variant: case index[:status]
+                             when 'healthy' then :success
+                             when 'degraded' then :warning
+                             else :destructive
+                             end
+                  ) do %>
+                    <%= case index[:status]
+                        when 'healthy' then '정상'
+                        when 'degraded' then '성능 저하'
+                        else '오류'
+                        end %>
+                  <% end %>
+                  <%= render Ui::ButtonComponent.new(variant: :outline, size: :sm) do %>
+                    <button onclick="optimizeIndex('<%= index[:id] %>')" class="text-inherit">
+                      최적화
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p class="text-sm text-gray-500">인덱스 타입</p>
+                  <p class="font-medium text-gray-900"><%= index[:type] %></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">문서 수</p>
+                  <p class="font-medium text-gray-900"><%= number_with_delimiter(index[:documents]) %></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">크기</p>
+                  <p class="font-medium text-gray-900"><%= index[:size] %></p>
+                </div>
+                <div>
+                  <p class="text-sm text-gray-500">정확도</p>
+                  <p class="font-medium text-gray-900"><%= index[:accuracy] %>%</p>
+                </div>
+              </div>
+
+              <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-sm text-gray-500">
+                  마지막 업데이트: <%= time_ago_in_words(index[:last_updated]) %> 전
+                </p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Search Test Tab -->
+      <div id="search-test-content" class="rag-content p-6 hidden">
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">RAG 검색 테스트</h3>
+          <p class="text-gray-600">RAG 시스템의 검색 품질을 테스트하고 평가하세요</p>
+        </div>
+
+        <div class="bg-white border rounded-lg p-6 mb-6">
+          <div class="flex gap-4">
+            <input type="text" id="searchQuery" placeholder="검색할 질문을 입력하세요 (예: VLOOKUP 함수 오류 해결)" 
+                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <%= render Ui::ButtonComponent.new do %>
+              <button onclick="testSearch()" id="testSearchBtn">
+                검색 테스트
+              </button>
+            <% end %>
+          </div>
+        </div>
+
+        <div id="searchResults" class="hidden">
+          <div class="space-y-6">
+            <!-- Search results will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Embedding Jobs Tab -->
+      <div id="embedding-jobs-content" class="rag-content p-6 hidden">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">임베딩 작업 관리</h3>
+            <p class="text-gray-600">벡터 임베딩 생성 및 인덱싱 작업을 관리하세요</p>
+          </div>
+          <div class="flex gap-2">
+            <%= render Ui::ButtonComponent.new(variant: :outline) do %>
+              <button onclick="startEmbeddingJob('incremental')">
+                증분 색인
+              </button>
+            <% end %>
+            <%= render Ui::ButtonComponent.new(variant: :outline) do %>
+              <button onclick="startEmbeddingJob('cleanup')">
+                정리 작업
+              </button>
+            <% end %>
+            <%= render Ui::ButtonComponent.new do %>
+              <button onclick="startEmbeddingJob('full_reindex')">
+                전체 재색인
+              </button>
+            <% end %>
+          </div>
+        </div>
+
+        <div id="embeddingJobsList" class="space-y-4">
+          <% @embedding_jobs.each do |job| %>
+            <div class="bg-white border rounded-lg p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <% case job[:status] %>
+                  <% when 'completed' %>
+                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  <% when 'failed' %>
+                    <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  <% when 'running' %>
+                    <svg class="h-5 w-5 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                  <% end %>
+                  <div>
+                    <h4 class="font-semibold text-gray-900">
+                      <%= case job[:type]
+                          when 'full_reindex' then '전체 재색인'
+                          when 'incremental' then '증분 색인'
+                          when 'cleanup' then '정리 작업'
+                          else job[:type]
+                          end %>
+                    </h4>
+                    <p class="text-sm text-gray-500">ID: <%= job[:id] %></p>
+                  </div>
+                </div>
+                <%= render Ui::BadgeComponent.new(
+                  variant: case job[:status]
+                           when 'completed' then :success
+                           when 'failed' then :destructive
+                           when 'running' then :warning
+                           else :secondary
+                           end
+                ) do %>
+                  <%= case job[:status]
+                      when 'completed' then '완료'
+                      when 'failed' then '실패'
+                      when 'running' then '진행중'
+                      else '대기중'
+                      end %>
+                <% end %>
+              </div>
+
+              <% if job[:status] == 'running' %>
+                <div class="mb-4">
+                  <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span><%= job[:documents_processed] %> / <%= job[:total_documents] %> 문서</span>
+                    <span><%= job[:progress] %>%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                         style="width: <%= job[:progress] %>%"></div>
+                  </div>
+                </div>
+              <% end %>
+
+              <div class="text-sm text-gray-500">
+                <p>시작: <%= time_ago_in_words(job[:started_at]) %> 전</p>
+                <% if job[:completed_at] %>
+                  <p>완료: <%= time_ago_in_words(job[:completed_at]) %> 전</p>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="settings-content" class="rag-content p-6 hidden">
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">RAG 시스템 설정</h3>
+          <p class="text-gray-600">RAG 시스템의 구성과 매개변수를 관리하세요</p>
+        </div>
+
+        <div class="space-y-6">
+          <div class="bg-white border rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">임베딩 설정</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">임베딩 모델</label>
+                <select class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <option selected>text-embedding-3-small</option>
+                  <option>text-embedding-3-large</option>
+                  <option>text-embedding-ada-002</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">배치 크기</label>
+                <input type="number" value="100" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white border rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">검색 설정</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">검색 결과 수 (Top-K)</label>
+                <input type="number" value="5" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">유사도 임계값</label>
+                <input type="number" value="0.7" step="0.1" min="0" max="1" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white border rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-gray-900 mb-4">인덱스 설정</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">인덱스 타입</label>
+                <select class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <option selected>HNSW</option>
+                  <option>IVF</option>
+                  <option>Flat</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">최적화 주기 (일)</label>
+                <input type="number" value="7" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <%= render Ui::ButtonComponent.new do %>
+              설정 저장
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Tab switching functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const tabs = document.querySelectorAll('.rag-tab');
+  const contents = document.querySelectorAll('.rag-content');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Remove active classes
+      tabs.forEach(t => {
+        t.classList.remove('border-blue-500', 'text-blue-600');
+        t.classList.add('border-transparent', 'text-gray-500');
+      });
+      
+      contents.forEach(c => c.classList.add('hidden'));
+      
+      // Add active classes
+      this.classList.remove('border-transparent', 'text-gray-500');
+      this.classList.add('border-blue-500', 'text-blue-600');
+      
+      // Show corresponding content
+      const tabName = this.getAttribute('data-tab');
+      document.getElementById(tabName + '-content').classList.remove('hidden');
+    });
+  });
+});
+
+// Index optimization
+async function optimizeIndex(indexId) {
+  try {
+    const response = await fetch(`/admin/knowledge_base/rag/indices/${indexId}/optimize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(`인덱스 최적화가 시작되었습니다. 예상 시간: ${data.estimated_time}분`);
+    } else {
+      alert('최적화 시작에 실패했습니다: ' + data.error);
+    }
+  } catch (error) {
+    alert('오류가 발생했습니다: ' + error.message);
+  }
+}
+
+// Search testing
+async function testSearch() {
+  const query = document.getElementById('searchQuery').value.trim();
+  const btn = document.getElementById('testSearchBtn');
+  const resultsDiv = document.getElementById('searchResults');
+  
+  if (!query) {
+    alert('검색 쿼리를 입력해주세요');
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = '검색 중...';
+  
+  try {
+    const response = await fetch('/admin/knowledge_base/rag/test_search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ query: query })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      displaySearchResults(data.results);
+      resultsDiv.classList.remove('hidden');
+    } else {
+      alert('검색 테스트 실패: ' + data.error);
+    }
+  } catch (error) {
+    alert('오류가 발생했습니다: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '검색 테스트';
+  }
+}
+
+// Display search results
+function displaySearchResults(results) {
+  const resultsDiv = document.getElementById('searchResults');
+  
+  const html = `
+    <div class="bg-white border rounded-lg p-6">
+      <h4 class="text-lg font-semibold text-gray-900 mb-4">검색 결과</h4>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div>
+          <h5 class="font-semibold text-gray-900 mb-2">성능 지표</h5>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span>총 소요시간:</span>
+              <span>${results.metrics.total_time}ms</span>
+            </div>
+            <div class="flex justify-between">
+              <span>검색 시간:</span>
+              <span>${results.metrics.search_time}ms</span>
+            </div>
+            <div class="flex justify-between">
+              <span>답변 생성:</span>
+              <span>${results.metrics.generation_time}ms</span>
+            </div>
+            <div class="flex justify-between">
+              <span>검색된 문서:</span>
+              <span>${results.metrics.documents_retrieved}개</span>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h5 class="font-semibold text-gray-900 mb-2">품질 평가</h5>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span>관련성 점수:</span>
+              <span>${results.quality_metrics.relevance_score}/100</span>
+            </div>
+            <div class="flex justify-between">
+              <span>답변 품질:</span>
+              <span>${results.quality_metrics.answer_quality}/100</span>
+            </div>
+            <div class="flex justify-between">
+              <span>다양성 점수:</span>
+              <span>${results.quality_metrics.diversity_score}/100</span>
+            </div>
+            <div class="flex justify-between">
+              <span>전체 점수:</span>
+              <span class="font-semibold">${results.quality_metrics.overall_score}/100</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="space-y-4">
+        <div>
+          <h5 class="font-semibold text-gray-900 mb-2">생성된 답변</h5>
+          <div class="bg-gray-50 rounded-lg p-4 text-sm">
+            ${results.generated_answer.replace(/\n/g, '<br>')}
+          </div>
+        </div>
+        
+        <div>
+          <h5 class="font-semibold text-gray-900 mb-2">검색된 문서</h5>
+          <div class="space-y-2">
+            ${results.documents.map(doc => `
+              <div class="border rounded-lg p-3">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-medium text-sm">${doc.category}</span>
+                  <span class="text-xs text-gray-500">유사도: ${(doc.similarity * 100).toFixed(1)}%</span>
+                </div>
+                <p class="text-sm text-gray-900 mb-1">${doc.question}</p>
+                <p class="text-xs text-gray-600">${doc.answer.substring(0, 100)}...</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  resultsDiv.innerHTML = html;
+}
+
+// Embedding job management
+async function startEmbeddingJob(type) {
+  if (!confirm(`${getJobTypeText(type)} 작업을 시작하시겠습니까?`)) {
+    return;
+  }
+  
+  try {
+    const response = await fetch('/admin/knowledge_base/rag/embedding_jobs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+      },
+      body: JSON.stringify({ type: type })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      alert(data.message);
+      location.reload(); // Refresh to show new job
+    } else {
+      alert('작업 시작 실패: ' + data.error);
+    }
+  } catch (error) {
+    alert('오류가 발생했습니다: ' + error.message);
+  }
+}
+
+function getJobTypeText(type) {
+  switch(type) {
+    case 'full_reindex': return '전체 재색인';
+    case 'incremental': return '증분 색인'; 
+    case 'cleanup': return '정리 작업';
+    default: return type;
+  }
+}
+
+// Auto-refresh for running jobs
+setInterval(() => {
+  if (document.querySelector('.animate-spin')) {
+    // Reload only if there are running jobs
+    location.reload();
+  }
+}, 15000);
+</script>

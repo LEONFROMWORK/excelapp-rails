@@ -1,0 +1,275 @@
+<% content_for :title, "ExcelApp - AI Excel Analysis" %>
+
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+  <div class="container mx-auto px-4 py-8">
+    <% if user_signed_in? %>
+      <!-- Authenticated User Dashboard -->
+      <div class="space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">Welcome back, <%= current_user.name %>!</h1>
+          <p class="text-xl text-gray-600 dark:text-gray-300">Your AI-powered Excel analysis dashboard</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+              <div class="bg-blue-100 dark:bg-blue-900/50 rounded-full p-3">
+                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= current_user.excel_files.count %></p>
+                <p class="text-gray-600 dark:text-gray-300">Files Analyzed</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+              <div class="bg-green-100 dark:bg-green-900/50 rounded-full p-3">
+                <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= current_user.tokens %></p>
+                <p class="text-gray-600 dark:text-gray-300">Tokens Available</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+              <div class="bg-purple-100 dark:bg-purple-900/50 rounded-full p-3">
+                <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white"><%= current_user.analyses.count %></p>
+                <p class="text-gray-600 dark:text-gray-300">AI Analyses</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Upload New File</h2>
+          <%= render Excel::FileUploadComponent.new(user: current_user) %>
+        </div>
+
+        <!-- Recent Files -->
+        <% if @user_files&.any? %>
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Recent Files</h2>
+            <div class="space-y-4">
+              <% @user_files.each do |file| %>
+                <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                      <div class="bg-gray-100 dark:bg-gray-700 rounded-full p-2">
+                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="font-medium text-gray-900 dark:text-white"><%= file.original_name %></p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400"><%= file.human_file_size %> • <%= time_ago_in_words(file.created_at) %> ago</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                      <%= render Ui::BadgeComponent.new(
+                        variant: case file.status
+                                when 'uploaded' then :info
+                                when 'processing' then :warning
+                                when 'analyzed' then :success
+                                when 'failed' then :destructive
+                                when 'cancelled' then :secondary
+                                else :secondary
+                                end
+                      ) do %>
+                        <%= file.status.humanize %>
+                      <% end %>
+                      <% if file.analyzed? %>
+                        <a href="/files/<%= file.id %>" class="text-blue-600 hover:text-blue-800">View Results</a>
+                      <% elsif file.processing? %>
+                        <button onclick="showProgress('<%= file.id %>')" class="text-yellow-600 hover:text-yellow-800">View Progress</button>
+                      <% end %>
+                    </div>
+                  </div>
+                  
+                  <!-- Progress Component for processing files -->
+                  <% if file.processing? %>
+                    <div class="mt-4" id="progress-<%= file.id %>">
+                      <%= render Excel::AnalysisProgressComponent.new(excel_file: file, user: current_user) %>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- WebSocket Connection Test -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">WebSocket Connection Test</h2>
+          <div class="space-y-4">
+            <div class="flex items-center space-x-4">
+              <div id="connection-status" class="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span id="connection-text">Disconnected</span>
+            </div>
+            <%= render Ui::ButtonComponent.new(onclick: "testWebSocket()") do %>
+              Test Connection
+            <% end %>
+            <div id="websocket-log" class="bg-gray-100 dark:bg-gray-700 rounded-md p-4 text-sm font-mono h-32 overflow-y-auto text-gray-900 dark:text-gray-100"></div>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <!-- Guest Landing Page -->
+      <div class="text-center space-y-8">
+        <div class="space-y-4">
+          <h1 class="text-5xl font-bold text-gray-900 dark:text-white">ExcelApp</h1>
+          <p class="text-xl text-gray-600 dark:text-gray-300">AI-powered Excel error detection and optimization</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div class="bg-blue-100 dark:bg-blue-900/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Smart Detection</h3>
+            <p class="text-gray-600 dark:text-gray-300">AI automatically detects formula errors, data validation issues, and optimization opportunities</p>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div class="bg-green-100 dark:bg-green-900/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Real-time Analysis</h3>
+            <p class="text-gray-600 dark:text-gray-300">Get instant feedback and progress updates as AI analyzes your Excel files</p>
+          </div>
+
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <div class="bg-purple-100 dark:bg-purple-900/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Cost Efficient</h3>
+            <p class="text-gray-600 dark:text-gray-300">2-tier AI system optimizes costs while maintaining high accuracy</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <%= render Ui::ButtonComponent.new(size: :lg, class: "px-8 py-3 text-lg") do %>
+            <%= link_to "Get Started", signup_path, class: "text-inherit no-underline" %>
+          <% end %>
+          <div class="text-gray-600 dark:text-gray-300">
+            Already have an account? <a href="/login" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">Sign in</a>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+let cable = null;
+let testSubscription = null;
+
+function testWebSocket() {
+  const log = document.getElementById('websocket-log');
+  const statusDot = document.getElementById('connection-status');
+  const statusText = document.getElementById('connection-text');
+  
+  log.innerHTML = '';
+  addToLog('Attempting WebSocket connection...');
+  
+  if (cable) {
+    cable.disconnect();
+  }
+  
+  cable = ActionCable.createConsumer();
+  
+  // Test connection with a sample file ID (if available)
+  const testFileId = '<%= @user_files&.first&.id %>';
+  
+  if (!testFileId) {
+    addToLog('No test file available. Upload a file first.');
+    return;
+  }
+  
+  testSubscription = cable.subscriptions.create({
+    channel: 'ExcelAnalysisChannel',
+    file_id: testFileId
+  }, {
+    connected() {
+      addToLog('✓ Connected to WebSocket');
+      statusDot.className = 'w-3 h-3 bg-green-500 rounded-full';
+      statusText.textContent = 'Connected';
+    },
+
+    disconnected() {
+      addToLog('✗ Disconnected from WebSocket');
+      statusDot.className = 'w-3 h-3 bg-red-500 rounded-full';
+      statusText.textContent = 'Disconnected';
+    },
+
+    received(data) {
+      addToLog('← Received: ' + JSON.stringify(data));
+    },
+
+    rejected() {
+      addToLog('✗ Connection rejected');
+      statusDot.className = 'w-3 h-3 bg-red-500 rounded-full';
+      statusText.textContent = 'Rejected';
+    }
+  });
+  
+  // Test sending a message after connection
+  setTimeout(() => {
+    if (testSubscription) {
+      testSubscription.send({
+        action: 'get_analysis_status',
+        file_id: testFileId
+      });
+      addToLog('→ Sent: get_analysis_status');
+    }
+  }, 2000);
+}
+
+function addToLog(message) {
+  const log = document.getElementById('websocket-log');
+  const timestamp = new Date().toLocaleTimeString();
+  log.innerHTML += `[${timestamp}] ${message}\n`;
+  log.scrollTop = log.scrollHeight;
+}
+
+function showProgress(fileId) {
+  const progressDiv = document.getElementById(`progress-${fileId}`);
+  if (progressDiv) {
+    progressDiv.style.display = progressDiv.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Auto-connect WebSocket on page load for testing
+<% if user_signed_in? %>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize WebSocket connection for existing processing files
+    const processingFiles = document.querySelectorAll('[data-file-id]');
+    processingFiles.forEach(function(element) {
+      const fileId = element.getAttribute('data-file-id');
+      // WebSocket connection is already handled in the component
+    });
+  });
+<% end %>
+</script>

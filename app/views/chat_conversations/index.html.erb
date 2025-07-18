@@ -1,0 +1,125 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="sm:flex sm:items-center">
+    <div class="sm:flex-auto">
+      <h1 class="text-3xl font-bold text-gray-900">AI Chat</h1>
+      <p class="mt-2 text-sm text-gray-700">
+        Chat with AI to generate Excel files, get formula help, or analyze your data.
+      </p>
+    </div>
+    <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+      <%= form_with model: @new_conversation, url: chat_conversations_path, 
+          class: "inline-flex items-center" do |f| %>
+        <%= f.submit "New Conversation", 
+            class: "inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <!-- Conversations List -->
+    <div class="lg:col-span-1">
+      <%= render Ui::CardComponent.new do |card| %>
+        <% card.with_header do %>
+          <h2 class="text-lg font-medium text-gray-900">Conversations</h2>
+        <% end %>
+        
+        <div class="divide-y divide-gray-200">
+          <% if @conversations.any? %>
+            <% @conversations.each do |conversation| %>
+              <%= link_to chat_conversation_path(conversation), 
+                  class: "block hover:bg-gray-50 px-4 py-4 transition-colors" do %>
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      <%= conversation.title %>
+                    </p>
+                    <p class="text-sm text-gray-500">
+                      <%= conversation.message_count %> messages
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">
+                  <%= conversation.updated_at.strftime("%b %d at %I:%M %p") %>
+                </p>
+              <% end %>
+            <% end %>
+          <% else %>
+            <div class="px-4 py-8 text-center">
+              <p class="text-sm text-gray-500">No conversations yet</p>
+              <p class="mt-1 text-xs text-gray-400">Start a new conversation to begin</p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Welcome/Instructions -->
+    <div class="lg:col-span-2">
+      <%= render Ui::CardComponent.new do |card| %>
+        <% card.with_header do %>
+          <h2 class="text-lg font-medium text-gray-900">Welcome to AI Chat</h2>
+        <% end %>
+        
+        <div class="space-y-6">
+          <div>
+            <h3 class="text-sm font-medium text-gray-900 mb-2">What can I help you with?</h3>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="text-sm font-medium text-blue-900">📊 Generate Excel Files</h4>
+                <p class="mt-1 text-sm text-blue-700">
+                  "Create a monthly budget tracker with income and expense categories"
+                </p>
+              </div>
+              <div class="bg-green-50 p-4 rounded-lg">
+                <h4 class="text-sm font-medium text-green-900">🔧 Fix Formulas</h4>
+                <p class="mt-1 text-sm text-green-700">
+                  "Help me fix this VLOOKUP formula that's returning #N/A"
+                </p>
+              </div>
+              <div class="bg-purple-50 p-4 rounded-lg">
+                <h4 class="text-sm font-medium text-purple-900">📈 Data Analysis</h4>
+                <p class="mt-1 text-sm text-purple-700">
+                  "Analyze my sales data and suggest visualization options"
+                </p>
+              </div>
+              <div class="bg-yellow-50 p-4 rounded-lg">
+                <h4 class="text-sm font-medium text-yellow-900">⚡ Optimization</h4>
+                <p class="mt-1 text-sm text-yellow-700">
+                  "How can I make my Excel file with 10,000 rows run faster?"
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="text-sm font-medium text-gray-900 flex items-center">
+              <svg class="mr-2 h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Tips for better results
+            </h3>
+            <ul class="mt-2 text-sm text-gray-600 space-y-1 list-disc list-inside">
+              <li>Be specific about what you need</li>
+              <li>Provide context about your data structure</li>
+              <li>Mention any specific Excel version requirements</li>
+              <li>Ask for explanations if you want to learn</li>
+            </ul>
+          </div>
+
+          <div class="text-center pt-4">
+            <%= form_with model: @new_conversation, url: chat_conversations_path,
+                class: "inline-block" do |f| %>
+              <%= f.submit "Start New Conversation", 
+                  class: "inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

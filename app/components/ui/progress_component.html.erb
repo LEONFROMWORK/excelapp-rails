@@ -1,0 +1,20 @@
+<div class="w-full">
+  <% if label %>
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm font-medium text-gray-700"><%= label %></span>
+      <span class="text-sm text-gray-500"><%= progress_percentage %>%</span>
+    </div>
+  <% end %>
+  
+  <div class="<%= progress_classes %>">
+    <div 
+      class="<%= progress_bar_classes %>" 
+      style="transform: translateX(-<%= 100 - progress_percentage %>%)"
+      role="progressbar"
+      aria-valuenow="<%= value %>"
+      aria-valuemin="0"
+      aria-valuemax="<%= max %>"
+    >
+    </div>
+  </div>
+</div>

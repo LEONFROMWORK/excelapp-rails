@@ -1,0 +1,264 @@
+<% content_for :title, "지식 베이스 관리" %>
+
+<div class="min-h-screen bg-gray-50">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <%= link_to "관리자", admin_root_path, class: "hover:text-gray-900" %>
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+          <span>지식 베이스 관리</span>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900">지식 베이스 관리</h1>
+        <p class="text-gray-600 mt-2">Excel Q&A 데이터를 관리하고 AI 학습을 위한 지식 베이스를 구축하세요</p>
+      </div>
+      <div class="flex gap-2">
+        <%= render Ui::ButtonComponent.new do %>
+          <%= link_to admin_knowledge_base_datasets_path, class: "text-inherit no-underline flex items-center" do %>
+            <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            데이터 업로드
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">총 문서 수</p>
+            <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@knowledge_base_stats[:total_documents]) %></p>
+            <p class="text-xs text-gray-500">Excel Q&A 데이터</p>
+          </div>
+          <div class="bg-blue-100 rounded-full p-3">
+            <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">임베딩 수</p>
+            <p class="text-2xl font-bold text-gray-900"><%= number_with_delimiter(@knowledge_base_stats[:total_embeddings]) %></p>
+            <p class="text-xs text-gray-500">벡터 데이터베이스</p>
+          </div>
+          <div class="bg-green-100 rounded-full p-3">
+            <svg class="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">처리 중인 작업</p>
+            <p class="text-2xl font-bold text-gray-900"><%= @knowledge_base_stats[:processing_jobs] %></p>
+            <p class="text-xs text-gray-500">진행 중인 작업</p>
+          </div>
+          <div class="bg-yellow-100 rounded-full p-3">
+            <svg class="h-4 w-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">마지막 업데이트</p>
+            <p class="text-sm font-bold text-gray-900">
+              <%= time_ago_in_words(@knowledge_base_stats[:last_updated]) %> 전
+            </p>
+            <p class="text-xs text-gray-500">최근 업데이트</p>
+          </div>
+          <div class="bg-purple-100 rounded-full p-3">
+            <svg class="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Distribution -->
+    <% if @knowledge_base_stats[:categories].any? %>
+      <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">카테고리별 문서 분포</h2>
+        <p class="text-gray-600 text-sm mb-4">Excel 도움말 주제별 데이터 분포</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <% @knowledge_base_stats[:categories].each do |category, count| %>
+            <div class="text-center p-4 border rounded-lg">
+              <div class="text-lg font-semibold text-gray-900"><%= number_with_delimiter(count) %></div>
+              <div class="text-sm text-gray-600"><%= category %></div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Processing Jobs -->
+    <% if @processing_jobs.any? %>
+      <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">진행 중인 작업</h2>
+        <p class="text-gray-600 text-sm mb-4">데이터 처리 및 임베딩 생성 현황</p>
+        <div class="space-y-4">
+          <% @processing_jobs.each do |job| %>
+            <div class="border rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <% case job[:status] %>
+                  <% when 'completed' %>
+                    <svg class="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  <% when 'failed' %>
+                    <svg class="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  <% when 'running' %>
+                    <svg class="h-4 w-4 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                  <% else %>
+                    <svg class="h-4 w-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                  <% end %>
+                  <span class="font-medium">
+                    <%= case job[:type]
+                        when 'upload' then '데이터 업로드'
+                        when 'embedding' then '임베딩 생성'
+                        else '데이터 처리'
+                        end %>
+                  </span>
+                  <%= render Ui::BadgeComponent.new(
+                    variant: case job[:status]
+                             when 'completed' then :default
+                             when 'failed' then :destructive
+                             else :secondary
+                             end
+                  ) do %>
+                    <%= case job[:status]
+                        when 'completed' then '완료'
+                        when 'failed' then '실패'
+                        when 'running' then '진행중'
+                        else '대기중'
+                        end %>
+                  <% end %>
+                </div>
+                <span class="text-sm text-gray-600">
+                  <%= time_ago_in_words(job[:created_at]) %> 전
+                </span>
+              </div>
+              
+              <% if job[:status] == 'running' %>
+                <div class="space-y-1">
+                  <div class="flex justify-between text-sm">
+                    <span><%= job[:processed_items] %> / <%= job[:total_items] %></span>
+                    <span><%= job[:progress] %>%</span>
+                  </div>
+                  <%= render Ui::ProgressComponent.new(value: job[:progress], class: "h-2") %>
+                </div>
+              <% end %>
+              
+              <% if job[:error] %>
+                <div class="mt-2 p-2 bg-red-50 rounded text-sm text-red-600">
+                  <%= job[:error] %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+        <%= link_to admin_knowledge_base_datasets_path, class: "block p-6" do %>
+          <div class="flex items-center gap-3 mb-2">
+            <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <h3 class="font-semibold text-gray-900">데이터 업로드</h3>
+          </div>
+          <p class="text-gray-600 text-sm">포럼 Q&A 데이터 파일을 업로드하고 처리하세요</p>
+        <% end %>
+      </div>
+
+      <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+        <%= link_to admin_knowledge_base_learning_index_path, class: "block p-6" do %>
+          <div class="flex items-center gap-3 mb-2">
+            <svg class="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+            </svg>
+            <h3 class="font-semibold text-gray-900">AI 학습 관리</h3>
+          </div>
+          <p class="text-gray-600 text-sm">AI 모델의 학습 상태를 모니터링하고 관리하세요</p>
+        <% end %>
+      </div>
+
+      <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+        <%= link_to admin_knowledge_base_rag_root_path, class: "block p-6" do %>
+          <div class="flex items-center gap-3 mb-2">
+            <svg class="h-5 w-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <h3 class="font-semibold text-gray-900">RAG 시스템 관리</h3>
+          </div>
+          <p class="text-gray-600 text-sm">벡터 검색과 RAG 파이프라인을 관리하세요</p>
+        <% end %>
+      </div>
+
+      <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+        <%= link_to "#", class: "block p-6" do %>
+          <div class="flex items-center gap-3 mb-2">
+            <svg class="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <h3 class="font-semibold text-gray-900">설정</h3>
+          </div>
+          <p class="text-gray-600 text-sm">임베딩 모델과 처리 설정을 관리하세요</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Usage Guide -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h2 class="text-lg font-semibold text-gray-900">사용 가이드</h2>
+      </div>
+      <div class="space-y-2 text-sm text-gray-700">
+        <p><strong>1. 데이터 업로드</strong>: JSONL 형식의 Q&A 데이터를 업로드하세요</p>
+        <p><strong>2. 자동 처리</strong>: 품질 필터링, 임베딩 생성이 자동으로 진행됩니다</p>
+        <p><strong>3. 즉시 적용</strong>: 처리 완료 즉시 AI 답변에 반영됩니다</p>
+        <p><strong>4. 성능 모니터링</strong>: 답변 품질과 사용자 만족도를 추적하세요</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Auto-refresh processing jobs every 15 seconds
+  setInterval(() => {
+    if (document.querySelector('[data-status="running"]')) {
+      location.reload();
+    }
+  }, 15000);
+</script>
