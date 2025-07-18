@@ -33,7 +33,7 @@ gem "oj", "~> 3.16"
 # Vector Database and RAG
 gem "pgvector", "~> 0.3"
 gem "neighbor", "~> 0.4"
-gem "ruby-openai", "~> 7.1"
+gem "ruby-openai", "~> 8.1"
 gem "tiktoken_ruby", "~> 0.0.8"
 
 # Authentication & Security
