@@ -43,7 +43,7 @@ gem "rack-attack", "~> 6.7"
 gem "rack-cors", "~> 2.0"
 
 # Redis
-gem "redis", "~> 5.3"
+gem "redis", "~> 5.4"
 gem "hiredis", "~> 0.6"
 gem "redis-client", ">= 0.22"
 
