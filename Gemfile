@@ -97,7 +97,7 @@ group :development do
   
   # Performance
   gem "bullet", "~> 8.0"
-  gem "rack-mini-profiler", "~> 3.3"
+  gem "rack-mini-profiler", "~> 4.0"
   gem "memory_profiler"
   
   # Documentation
