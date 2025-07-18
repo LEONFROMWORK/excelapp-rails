@@ -3,7 +3,10 @@
 set -o errexit
 
 # Set SECRET_KEY_BASE for asset precompilation if not already set
-export SECRET_KEY_BASE=${SECRET_KEY_BASE:-$(bundle exec rails secret)}
+# Use a temporary key for build process if Render hasn't set one yet
+if [ -z "$SECRET_KEY_BASE" ]; then
+  export SECRET_KEY_BASE="temporary_key_for_asset_precompilation_$(date +%s)"
+fi
 
 # Install dependencies
 bundle install
