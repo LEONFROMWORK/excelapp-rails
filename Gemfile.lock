@@ -215,7 +215,7 @@ GEM
       reline (>= 0.4.2)
     jmespath (1.6.2)
     json (2.12.2)
-    jwt (2.10.2)
+    jwt (3.1.2)
       base64
     kamal (2.7.0)
       activesupport (>= 7.0)
@@ -630,7 +630,7 @@ DEPENDENCIES
   hiredis (~> 0.6)
   httparty (~> 0.22)
   importmap-rails
-  jwt (~> 2.9)
+  jwt (~> 3.1)
   kamal (~> 2.3)
   kaminari (~> 1.2)
   listen (~> 3.9)
