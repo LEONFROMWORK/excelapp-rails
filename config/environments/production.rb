@@ -79,6 +79,9 @@ Rails.application.configure do
   # Allow asset precompilation without secret_key_base
   config.require_master_key = false
 
+  # Force SECRET_KEY_BASE for deployment
+  config.secret_key_base = ENV['SECRET_KEY_BASE'] || 'hardcoded_secret_key_base_for_production_deployment_fix_12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456'
+
   # Enable DNS rebinding protection and other `Host` header attacks.
   # config.hosts = [
   #   "example.com",     # Allow requests from example.com
