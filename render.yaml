@@ -12,6 +12,9 @@ services:
     plan: starter
     buildCommand: "./bin/render-build.sh"
     startCommand: "bundle exec puma -C config/puma.rb"
+    buildFilter:
+      paths:
+      - bin/render-build.sh
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -24,7 +27,7 @@ services:
       - key: RAILS_LOG_TO_STDOUT
         value: true
       - key: RUBY_VERSION
-        value: 3.3.0
+        value: 3.4.4
       - key: BUNDLE_WITHOUT
         value: development:test
       - key: OPENROUTER_API_KEY
@@ -65,7 +68,7 @@ services:
       - key: RAILS_ENV
         value: production
       - key: RUBY_VERSION
-        value: 3.3.0
+        value: 3.4.4
       - key: BUNDLE_WITHOUT
         value: development:test
       - key: OPENROUTER_API_KEY
