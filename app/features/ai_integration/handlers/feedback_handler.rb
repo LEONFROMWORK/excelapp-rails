@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Ai
+module AiIntegration
   module Handlers
     class FeedbackHandler < Common::BaseHandler
       def initialize(user:, conversation_id:, message_id:, rating:, feedback_text: nil)

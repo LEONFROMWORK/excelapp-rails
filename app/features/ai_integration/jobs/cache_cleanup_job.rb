@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-module Ai
+module AiIntegration
   class CacheCleanupJob < ApplicationJob
     queue_as :default
 
     def perform
-      cache_service = Ai::ResponseCache.new
+      cache_service = AiIntegration::ResponseCache.new
       
       Rails.logger.info("Starting AI cache cleanup job")
       

@@ -80,7 +80,7 @@ module ExcelAnalysis
 
       def perform_ai_analysis(file_data, errors)
         # Start with tier 1 analysis
-        tier1_service = Ai::MultiProviderService.new(tier: 1)
+        tier1_service = AiIntegration::MultiProviderService.new(tier: 1)
         tier1_result = tier1_service.analyze_excel(
           file_data: {
             name: @excel_file.original_name,
@@ -94,7 +94,7 @@ module ExcelAnalysis
         if tier1_result[:confidence_score] < 0.85 && @user.can_use_ai_tier?(2)
           broadcast_progress("Escalating to advanced AI analysis...", 60)
           
-          tier2_service = Ai::MultiProviderService.new(tier: 2)
+          tier2_service = AiIntegration::MultiProviderService.new(tier: 2)
           tier2_result = tier2_service.analyze_excel(
             file_data: {
               name: @excel_file.original_name,

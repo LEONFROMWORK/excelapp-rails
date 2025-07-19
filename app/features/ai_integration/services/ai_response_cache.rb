@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Ai
+module AiIntegration
   class ResponseCache
     CACHE_TTL = 1.hour.freeze
     MAX_CACHE_SIZE = 10.megabytes.freeze

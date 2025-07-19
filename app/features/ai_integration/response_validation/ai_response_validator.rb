@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Ai
+module AiIntegration
   module ResponseValidation
     class AiResponseValidator
       REQUIRED_FIELDS = %w[message confidence_score tokens_used provider].freeze

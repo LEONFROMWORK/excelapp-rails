@@ -6,7 +6,7 @@ module Api
       before_action :authenticate_user!
       
       def chat
-        handler = Ai::Handlers::ChatHandler.new(
+        handler = AiIntegration::Handlers::ChatHandler.new(
           user: current_user,
           message: params[:message],
           conversation_id: params[:conversation_id],
@@ -31,7 +31,7 @@ module Api
       end
       
       def feedback
-        handler = Ai::Handlers::FeedbackHandler.new(
+        handler = AiIntegration::Handlers::FeedbackHandler.new(
           user: current_user,
           conversation_id: params[:conversation_id],
           message_id: params[:message_id],

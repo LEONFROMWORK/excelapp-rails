@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Ai
+module AiIntegration
   class MultiProviderService
     TIER1_MODELS = {
       openrouter: ['anthropic/claude-3-haiku', 'openai/gpt-3.5-turbo'],
@@ -17,8 +17,8 @@ module Ai
     def initialize(tier: 1)
       @tier = tier
       @models = tier == 2 ? TIER2_MODELS : TIER1_MODELS
-      @cache = Ai::ResponseCache.new
-      @validator = Ai::ResponseValidation::AiResponseValidator
+      @cache = AiIntegration::ResponseCache.new
+      @validator = AiIntegration::ResponseValidation::AiResponseValidator
     end
 
     def chat(message:, context: {}, previous_response: nil, user:)
