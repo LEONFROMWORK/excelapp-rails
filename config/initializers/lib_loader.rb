@@ -1,9 +1,19 @@
 # Manual require for lib files to avoid Zeitwerk conflicts
-require Rails.root.join('lib', 'result')
-require Rails.root.join('lib', 'common_errors')
+lib_files_required = []
 
-# Require other lib files
-Dir.glob(Rails.root.join('lib', '**', '*.rb')).each do |file|
-  next if file.include?('tasks') # Skip rake tasks
-  require file
+# Require lib files in specific order to avoid dependencies issues
+[
+  'lib/result.rb',
+  'lib/common_errors.rb',
+  'lib/ai/ai_response_cache.rb',
+  'lib/ai/response_validation/ai_response_validator.rb',
+  'lib/excel/error_detector.rb',
+  'lib/excel/file_analyzer.rb',
+  'lib/excel/error_analyzer_service.rb'
+].each do |file_path|
+  full_path = Rails.root.join(file_path)
+  if File.exist?(full_path) && !lib_files_required.include?(full_path.to_s)
+    require full_path
+    lib_files_required << full_path.to_s
+  end
 end
