@@ -3,41 +3,41 @@
 module AiIntegration
   module Jobs
     class RagImportJob < ApplicationJob
-    queue_as :default
-    
-    def perform(import_type, data_source, options = {})
-      case import_type
-      when 'excel_knowledge'
-        import_excel_knowledge(data_source, options)
-      when 'community_qa'
-        import_community_qa(data_source, options)
-      when 'batch_documents'
-        import_batch_documents(data_source, options)
-      else
-        raise ArgumentError, "Unknown import type: #{import_type}"
-      end
-    end
-
-    private
-
-    def import_excel_knowledge(data_source, options)
-      orchestrator = RagSystem::RagOrchestrator.new
+      queue_as :default
       
-      case data_source
-      when 'oppadu'
-        import_oppadu_data(orchestrator, options)
-      when 'stackoverflow'
-        import_stackoverflow_data(orchestrator, options)
-      when 'reddit'
-        import_reddit_data(orchestrator, options)
-      when 'file'
-        import_file_data(orchestrator, options)
-      else
-        raise ArgumentError, "Unknown data source: #{data_source}"
+      def perform(import_type, data_source, options = {})
+        case import_type
+        when 'excel_knowledge'
+          import_excel_knowledge(data_source, options)
+        when 'community_qa'
+          import_community_qa(data_source, options)
+        when 'batch_documents'
+          import_batch_documents(data_source, options)
+        else
+          raise ArgumentError, "Unknown import type: #{import_type}"
+        end
       end
-    end
 
-    def import_oppadu_data(orchestrator, options)
+      private
+
+      def import_excel_knowledge(data_source, options)
+        orchestrator = RagOrchestrator.new
+        
+        case data_source
+        when 'oppadu'
+          import_oppadu_data(orchestrator, options)
+        when 'stackoverflow'
+          import_stackoverflow_data(orchestrator, options)
+        when 'reddit'
+          import_reddit_data(orchestrator, options)
+        when 'file'
+          import_file_data(orchestrator, options)
+        else
+          raise ArgumentError, "Unknown data source: #{data_source}"
+        end
+      end
+
+      def import_oppadu_data(orchestrator, options)
       # Import from Oppadu data collection
       data_file = options[:file_path] || "/Users/kevin/bigdata/data/output/latest_oppadu_data.jsonl"
       
@@ -90,20 +90,20 @@ module AiIntegration
       end
       
       Rails.logger.info("Completed Oppadu import: #{line_count} lines processed")
-    end
+      end
 
-    def import_stackoverflow_data(orchestrator, options)
+      def import_stackoverflow_data(orchestrator, options)
       # Import from StackOverflow API or dump
       # This would integrate with StackOverflow API
       Rails.logger.info("StackOverflow import not implemented yet")
-    end
+      end
 
-    def import_reddit_data(orchestrator, options)
+      def import_reddit_data(orchestrator, options)
       # Import from Reddit API
       Rails.logger.info("Reddit import not implemented yet")
-    end
+      end
 
-    def import_file_data(orchestrator, options)
+      def import_file_data(orchestrator, options)
       file_path = options[:file_path]
       format = options[:format] || 'jsonl'
       
@@ -113,18 +113,18 @@ module AiIntegration
       end
       
       case format
-      when 'jsonl'
-        import_jsonl_file(orchestrator, file_path)
-      when 'csv'
-        import_csv_file(orchestrator, file_path)
-      when 'json'
-        import_json_file(orchestrator, file_path)
-      else
-        raise ArgumentError, "Unsupported format: #{format}"
+        when 'jsonl'
+          import_jsonl_file(orchestrator, file_path)
+        when 'csv'
+          import_csv_file(orchestrator, file_path)
+        when 'json'
+          import_json_file(orchestrator, file_path)
+        else
+          raise ArgumentError, "Unsupported format: #{format}"
       end
-    end
+      end
 
-    def import_jsonl_file(orchestrator, file_path)
+      def import_jsonl_file(orchestrator, file_path)
       documents = []
       line_count = 0
       
@@ -161,9 +161,9 @@ module AiIntegration
       end
       
       Rails.logger.info("Completed JSONL import: #{line_count} lines processed")
-    end
+      end
 
-    def import_csv_file(orchestrator, file_path)
+      def import_csv_file(orchestrator, file_path)
       require 'csv'
       
       documents = []
@@ -197,14 +197,14 @@ module AiIntegration
       end
       
       Rails.logger.info("Completed CSV import: #{row_count} rows processed")
-    end
+      end
 
-    def import_json_file(orchestrator, file_path)
+      def import_json_file(orchestrator, file_path)
       data = JSON.parse(File.read(file_path))
       documents = []
       
       case data
-      when Array
+        when Array
         data.each do |item|
           if item['content'] || (item['question'] && item['answer'])
             content = item['content'] || build_qa_content(item['question'], item['answer'])
@@ -213,7 +213,7 @@ module AiIntegration
             documents << { content: content, metadata: metadata }
           end
         end
-      when Hash
+        when Hash
         if data['documents']
           data['documents'].each do |item|
             if item['content'] || (item['question'] && item['answer'])
@@ -230,28 +230,28 @@ module AiIntegration
         orchestrator.batch_index_excel_knowledge(documents)
         Rails.logger.info("Completed JSON import: #{documents.size} documents processed")
       end
-    end
+      end
 
-    def import_community_qa(data_source, options)
+      def import_community_qa(data_source, options)
       # Import community Q&A data
       Rails.logger.info("Community Q&A import for #{data_source} not implemented yet")
-    end
+      end
 
-    def import_batch_documents(data_source, options)
+      def import_batch_documents(data_source, options)
       # Import batch documents from various sources
       Rails.logger.info("Batch document import for #{data_source} not implemented yet")
-    end
+      end
 
-    def build_qa_content(question, answer)
+      def build_qa_content(question, answer)
       content_parts = []
       
       content_parts << "Q: #{question.strip}"
       content_parts << "A: #{answer.strip}" if answer.present?
       
       content_parts.join("\n\n")
-    end
+      end
 
-    def classify_difficulty(question)
+      def classify_difficulty(question)
       complex_indicators = [
         'vlookup', 'hlookup', 'index', 'match', 'sumifs', 'countifs',
         'pivot', 'macro', 'vba', 'array', 'nested', 'complex'
@@ -263,12 +263,12 @@ module AiIntegration
         'complex'
       elsif question_lower.length > 200
         'medium'
-      else
+        else
         'simple'
       end
-    end
+      end
 
-    def extract_excel_functions(content)
+      def extract_excel_functions(content)
       excel_functions = %w[
         SUM AVERAGE COUNT MAX MIN IF VLOOKUP HLOOKUP INDEX MATCH
         SUMIF SUMIFS COUNTIF COUNTIFS ROUND ABS AND OR NOT IFERROR
@@ -286,6 +286,7 @@ module AiIntegration
       end
       
       found_functions.uniq
+      end
     end
   end
 end
