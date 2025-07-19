@@ -5,6 +5,7 @@ lib_files_required = []
 [
   'lib/result.rb',
   'lib/common_errors.rb',
+  'app/common/base_handler.rb',
   'lib/ai/ai_response_cache.rb',
   'lib/ai/response_validation/ai_response_validator.rb',
   'lib/excel/error_detector.rb',
