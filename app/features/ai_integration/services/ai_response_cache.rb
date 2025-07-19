@@ -2,7 +2,7 @@
 
 module AiIntegration
   module Services
-    class ResponseCache
+    class AiResponseCache
         CACHE_TTL = 1.hour.freeze
         MAX_CACHE_SIZE = 10.megabytes.freeze
         

@@ -18,7 +18,7 @@ module AiIntegration
     def initialize(tier: 1)
       @tier = tier
       @models = tier == 2 ? TIER2_MODELS : TIER1_MODELS
-      @cache = AiIntegration::Services::ResponseCache.new
+      @cache = AiIntegration::Services::AiResponseCache.new
       @validator = AiIntegration::ResponseValidation::AiResponseValidator
       end
 
