@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 module AiIntegration
-  class MultiProviderService
+  module Services
+    class MultiProviderService
     TIER1_MODELS = {
       openrouter: ['anthropic/claude-3-haiku', 'openai/gpt-3.5-turbo'],
       openai: ['gpt-3.5-turbo'],
@@ -17,9 +18,9 @@ module AiIntegration
     def initialize(tier: 1)
       @tier = tier
       @models = tier == 2 ? TIER2_MODELS : TIER1_MODELS
-      @cache = AiIntegration::ResponseCache.new
+      @cache = AiIntegration::Services::ResponseCache.new
       @validator = AiIntegration::ResponseValidation::AiResponseValidator
-    end
+      end
 
     def chat(message:, context: {}, previous_response: nil, user:)
       prompt = build_prompt(message, context, previous_response)
@@ -35,7 +36,7 @@ module AiIntegration
       cached_response = @cache.get(cache_key)
       if cached_response
         return cached_response['data']
-      end
+        end
       
       # Try providers in order of preference
       @models.each do |provider, models|
@@ -54,17 +55,17 @@ module AiIntegration
               else
                 Rails.logger.warn("Invalid AI response from #{provider}/#{model}: #{validation_result.error}")
                 next
+                end
               end
-            end
           rescue => e
             Rails.logger.warn("AI Provider #{provider}/#{model} failed: #{e.message}")
             next
+            end
           end
         end
-      end
       
       raise "All AI providers failed or returned invalid responses"
-    end
+      end
 
     def analyze_excel(file_data:, user:, errors: [])
       prompt = build_excel_analysis_prompt(file_data, errors)
@@ -80,7 +81,7 @@ module AiIntegration
       cached_response = @cache.get(cache_key)
       if cached_response
         return cached_response['data']
-      end
+        end
       
       @models.each do |provider, models|
         models.each do |model|
@@ -98,17 +99,17 @@ module AiIntegration
               else
                 Rails.logger.warn("Invalid AI response from #{provider}/#{model}: #{validation_result.error}")
                 next
+                end
               end
-            end
           rescue => e
             Rails.logger.warn("AI Provider #{provider}/#{model} failed: #{e.message}")
             next
+            end
           end
         end
-      end
       
       raise "All AI providers failed or returned invalid responses for Excel analysis"
-    end
+      end
 
     private
 
@@ -127,7 +128,7 @@ module AiIntegration
           role: 'system',
           content: "File context: #{context[:file_info].to_json}"
         }
-      end
+        end
       
       # Add conversation history
       if context[:conversation_history]&.any?
@@ -136,8 +137,8 @@ module AiIntegration
             role: msg[:role],
             content: msg[:content]
           }
+          end
         end
-      end
       
       # Add previous tier 1 response if this is tier 2
       if previous_response
@@ -145,7 +146,7 @@ module AiIntegration
           role: 'system',
           content: "Previous analysis (please improve): #{previous_response}"
         }
-      end
+        end
       
       # User message
       prompt << {
@@ -154,7 +155,7 @@ module AiIntegration
       }
       
       prompt
-    end
+      end
 
     def build_excel_analysis_prompt(file_data, errors)
       [
@@ -172,7 +173,7 @@ module AiIntegration
           }.to_json
         }
       ]
-    end
+      end
 
     def excel_expert_system_prompt
       <<~PROMPT
@@ -192,7 +193,7 @@ module AiIntegration
         - Include confidence scores in your responses when possible
         - Reference specific cells, ranges, or functions when applicable
       PROMPT
-    end
+      end
 
     def excel_analysis_system_prompt
       <<~PROMPT
@@ -206,7 +207,7 @@ module AiIntegration
         
         Respond in JSON format with structured analysis results.
       PROMPT
-    end
+      end
 
     def send_request(provider, model, prompt, user)
       case provider
@@ -218,8 +219,8 @@ module AiIntegration
         send_anthropic_request(model, prompt, user)
       else
         raise "Unknown provider: #{provider}"
+        end
       end
-    end
 
     def send_openrouter_request(model, prompt, user)
       response = HTTParty.post(
@@ -246,7 +247,7 @@ module AiIntegration
     rescue => e
       Rails.logger.error("OpenRouter API error: #{e.message}")
       nil
-    end
+      end
 
     def send_openai_request(model, prompt, user)
       response = HTTParty.post(
@@ -270,7 +271,7 @@ module AiIntegration
     rescue => e
       Rails.logger.error("OpenAI API error: #{e.message}")
       nil
-    end
+      end
 
     def send_anthropic_request(model, prompt, user)
       response = HTTParty.post(
@@ -295,7 +296,7 @@ module AiIntegration
     rescue => e
       Rails.logger.error("Anthropic API error: #{e.message}")
       nil
-    end
+      end
 
     def parse_response(response, provider, model)
       case provider
@@ -303,8 +304,8 @@ module AiIntegration
         parse_openai_format_response(response, provider, model)
       when :anthropic
         parse_anthropic_format_response(response, provider, model)
+        end
       end
-    end
 
     def parse_analysis_response(response, provider, model)
       parsed = parse_response(response, provider, model)
@@ -315,8 +316,8 @@ module AiIntegration
         parsed.merge(structured_analysis: analysis_data)
       rescue JSON::ParserError
         parsed
+        end
       end
-    end
 
     def parse_openai_format_response(response, provider, model)
       choice = response.dig('choices', 0)
@@ -328,7 +329,7 @@ module AiIntegration
         tokens_used: calculate_tokens_used(usage),
         confidence_score: extract_confidence_score(choice.dig('message', 'content'))
       }
-    end
+      end
 
     def parse_anthropic_format_response(response, provider, model)
       content = response.dig('content', 0, 'text')
@@ -340,15 +341,15 @@ module AiIntegration
         tokens_used: calculate_tokens_used(usage),
         confidence_score: extract_confidence_score(content)
       }
-    end
+      end
 
     def calculate_tokens_used(usage)
       if usage
         (usage['prompt_tokens'] || 0) + (usage['completion_tokens'] || 0)
       else
         @tier == 2 ? 50 : 5 # Fallback estimates
+        end
       end
-    end
 
     def extract_confidence_score(content)
       # Try to extract confidence score from response
@@ -356,7 +357,7 @@ module AiIntegration
         $1.to_f / 100.0
       else
         @tier == 2 ? 0.9 : 0.7 # Default confidence by tier
+        end
       end
-    end
   end
 end

@@ -48,7 +48,7 @@ module AiIntegration
       end
 
       def process_with_tier1
-        service = AiIntegration::MultiProviderService.new(tier: 1)
+        service = AiIntegration::Services::MultiProviderService.new(tier: 1)
         context = build_context
         
         response = service.chat(
@@ -68,7 +68,7 @@ module AiIntegration
       def process_with_tier2(tier1_response)
         return failure("Insufficient tokens for Tier 2 analysis") unless @user.can_use_ai_tier?(2)
         
-        service = AiIntegration::MultiProviderService.new(tier: 2)
+        service = AiIntegration::Services::MultiProviderService.new(tier: 2)
         context = build_context
         
         response = service.chat(

@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 module AiIntegration
-  class UsageTracker
+  module Services
+    class UsageTracker
     PROVIDER_MAP = {
       'openai' => 'openai',
       'anthropic' => 'anthropic',

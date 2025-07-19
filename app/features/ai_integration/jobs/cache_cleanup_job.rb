@@ -6,7 +6,7 @@ module AiIntegration
       queue_as :default
 
       def perform
-        cache_service = AiIntegration::ResponseCache.new
+        cache_service = AiIntegration::Services::ResponseCache.new
         
         Rails.logger.info("Starting AI cache cleanup job")
         
