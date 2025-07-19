@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 module AiIntegration
-  class CacheCleanupJob < ApplicationJob
+  module Jobs
+    class CacheCleanupJob < ApplicationJob
     queue_as :default
 
     def perform

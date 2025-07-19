@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 module AiIntegration
-  class RagImportJob < ApplicationJob
+  module Jobs
+    class RagImportJob < ApplicationJob
     queue_as :default
     
     def perform(import_type, data_source, options = {})
